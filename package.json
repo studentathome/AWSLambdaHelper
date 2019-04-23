@@ -1,0 +1,29 @@
+{
+  "name": "@studentathome/awslambdahelper",
+  "version": "1.0.0",
+  "description": "An npm module with basic functions for AWS Lambda functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeVarneBV/AWSLambdaHelper.git"
+  },
+  "keywords": [
+    "AWS",
+    "Lambda",
+    "API Gateway"
+  ],
+  "author": "Development team studentathome <development@studentaanhuis.nl> (https://www.studentaanhuis.nl)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LeVarneBV/AWSLambdaHelper/issues"
+  },
+  "homepage": "https://github.com/LeVarneBV/AWSLambdaHelper#readme",
+  "dependencies": {
+    "aws-sdk": "^2.320.0",
+    "aws-xray-sdk": "^2.0.0",
+    "uuid": "^3.3.2"
+  }
+}
