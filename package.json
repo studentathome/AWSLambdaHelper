@@ -25,8 +25,12 @@
   "dependencies": {
     "aws-sdk": "^2.320.0",
     "aws-xray-sdk": "^2.0.0",
+    "chai": "^4.2.0",
     "mocha": "^6.1.4",
     "nyc": "^14.0.0",
     "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "aws-sdk-mock": "^4.4.0"
   }
 }

@@ -4,7 +4,7 @@ const async = require('async');
 const uuidv4 = require('uuid/v4');
 const cloudwatchlogs = new AWS.CloudWatchLogs();
 const lambda = new AWS.Lambda();
-const documentClient = new AWS.DynamoDB.DocumentClient();
+// const documentClient = new AWS.DynamoDB.DocumentClient();
 const http = AWSXRay.captureHTTPs(require('http'));
 const https = AWSXRay.captureHTTPs(require('https'));
 
@@ -190,6 +190,8 @@ module.exports = {
 
   dynamoQuery: function(tableName, keyConditionExpression, expressionAttributeValues, callback, indexName, lastEvaluatedKey, expressionAttributeNames, attributesToGet, filterExpression) {
     tableName += '-' + environment;
+
+    const documentClient = new AWS.DynamoDB.DocumentClient();
     var params = {
       TableName: tableName,
       KeyConditionExpression: keyConditionExpression,
@@ -215,6 +217,8 @@ module.exports = {
     if (filterExpression) {
       params.FilterExpression = filterExpression;
     }
+
+    console.log(params);
 
     documentClient.query(params, function(err, data) {
       if (err) {
