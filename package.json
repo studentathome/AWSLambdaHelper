@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "preversion": "npm run test",
-    "test": "nyc mocha"
+    "set_env": "AWS_XRAY_CONTEXT_MISSING=LOG_ERROR AWS_REGION=eu-west-1 AWS_ENVIRONMENT=dev CW_LOG_GROUP_NAME=AWSLambdaHelperTests",
+    "test": "npm run set_env nyc mocha"
   },
   "repository": {
     "type": "git",

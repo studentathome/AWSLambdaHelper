@@ -4,7 +4,7 @@ const async = require('async');
 const uuidv4 = require('uuid/v4');
 const cloudwatchlogs = new AWS.CloudWatchLogs();
 const lambda = new AWS.Lambda();
-// const documentClient = new AWS.DynamoDB.DocumentClient();
+const documentClient = new AWS.DynamoDB.DocumentClient();
 const http = AWSXRay.captureHTTPs(require('http'));
 const https = AWSXRay.captureHTTPs(require('https'));
 
@@ -218,8 +218,6 @@ module.exports = {
       params.FilterExpression = filterExpression;
     }
 
-    console.log(params);
-
     documentClient.query(params, function(err, data) {
       if (err) {
         console.log('Error query on table: ' + tableName);
@@ -240,6 +238,7 @@ module.exports = {
 
   dynamoScan: function(tableName, callback, indexName, lastEvaluatedKey, filterExpression, expressionAttributeNames, expressionAttributeValues, attributesToGet) {
     tableName += '-' + environment;
+    const documentClient = new AWS.DynamoDB.DocumentClient();
     var params = {
       TableName: tableName
     };
@@ -267,6 +266,8 @@ module.exports = {
     if (attributesToGet) {
       params.AttributesToGet = attributesToGet;
     }
+
+    console.log(params);
 
     documentClient.scan(params, function(err, data) {
       if (err) {
