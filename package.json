@@ -4,7 +4,7 @@
   "description": "An npm module with basic functions for AWS Lambda functions",
   "main": "index.js",
   "scripts": {
-    "preversion": "nyc mocha",
+    "preversion": "npm run test",
     "test": "nyc mocha"
   },
   "repository": {
