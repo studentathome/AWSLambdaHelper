@@ -267,8 +267,6 @@ module.exports = {
       params.AttributesToGet = attributesToGet;
     }
 
-    console.log(params);
-
     documentClient.scan(params, function(err, data) {
       if (err) {
         console.log('Error scan on table: ' + tableName);

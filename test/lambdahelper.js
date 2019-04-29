@@ -23,6 +23,7 @@ describe("LambdaHelper", function() {
     it("put", function(done) {
       lh.dynamoPut("marketingData", {"type":"awsLambdaHelperTest", "date": cur_date, "content": "This is a test for the awsLambdaHelper package"}, function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
+        expect(result, "Expected result to be undefined").to.be.undefined;
         done();
       });
     });
@@ -30,6 +31,7 @@ describe("LambdaHelper", function() {
     it("update", function(done) {
       lh.dynamoPut("marketingData", {"type":"awsLambdaHelperTest", "date": cur_date, "content": "This is a followup test for the awsLambdaHelper package"}, function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
+        expect(result, "Expected result to be undefined").to.be.undefined;
         done();
       });
     });
@@ -37,6 +39,12 @@ describe("LambdaHelper", function() {
     it("get", function(done) {
       lh.dynamoGet("marketingData", {"type":"awsLambdaHelperTest", "date": cur_date}, function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
+        expect(result).to.have.all.keys(["content", "date", "type"]);
+        expect(result).to.eql({ 
+          content: 'This is a followup test for the awsLambdaHelper package',
+          date: cur_date,
+          type: 'awsLambdaHelperTest' 
+        });
         done();
       });
     });
@@ -44,6 +52,9 @@ describe("LambdaHelper", function() {
     it("query", function(done) {
       lh.dynamoQuery("marketingData", "#type=:type", { ":type": "awsLambdaHelperTest" }, function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
+        expect(result).to.have.all.keys(["count", "items", "lastEvaluatedKey", "scannedCount"]);
+        expect(result.items).to.have.lengthOf.at.least(1);
+        expect(result.items[0]).to.have.all.keys(["content", "date", "type"]);
         done();
       }, null, null, { "#type": "type" });
     });
@@ -51,6 +62,9 @@ describe("LambdaHelper", function() {
     it("scan", function(done) {
       lh.dynamoScan("marketingData", function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
+        expect(result).to.have.all.keys(["count", "items", "lastEvaluatedKey", "scannedCount"]);
+        expect(result.items).to.have.lengthOf.at.least(1);
+        expect(result.items[0]).to.have.all.keys(["content", "date", "type"]);
         done();
       });
     });
@@ -87,6 +101,8 @@ describe("LambdaHelper", function() {
     it("http", function(done) {
       lh.httpsRequest(options, "", function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
+        expect(result).to.include.keys(["body"]);
+        expect(JSON.parse(result.body)).to.include.keys(["args", "headers", "origin", "url"]);
         done();
       });
     });
@@ -94,6 +110,8 @@ describe("LambdaHelper", function() {
     it("https", function(done) {
       lh.httpsRequest(options, "", function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
+        expect(result).to.include.keys(["body"]);
+        expect(JSON.parse(result.body)).to.include.keys(["args", "headers", "origin", "url"]);
         done();
       });
     });
