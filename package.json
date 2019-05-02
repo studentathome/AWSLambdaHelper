@@ -4,7 +4,9 @@
   "description": "An npm module with basic functions for AWS Lambda functions",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "preversion": "npm run test",
+    "set_env": "AWS_XRAY_CONTEXT_MISSING=LOG_ERROR AWS_REGION=eu-west-1 AWS_ENVIRONMENT=dev CW_LOG_GROUP_NAME=AWSLambdaHelperTests",
+    "test": "npm run set_env nyc mocha"
   },
   "repository": {
     "type": "git",
@@ -24,6 +26,12 @@
   "dependencies": {
     "aws-sdk": "^2.320.0",
     "aws-xray-sdk": "^2.0.0",
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4",
+    "nyc": "^14.0.0",
     "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "aws-sdk-mock": "^4.4.0"
   }
 }
