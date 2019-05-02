@@ -190,6 +190,8 @@ module.exports = {
 
   dynamoQuery: function(tableName, keyConditionExpression, expressionAttributeValues, callback, indexName, lastEvaluatedKey, expressionAttributeNames, attributesToGet, filterExpression) {
     tableName += '-' + environment;
+
+    const documentClient = new AWS.DynamoDB.DocumentClient();
     var params = {
       TableName: tableName,
       KeyConditionExpression: keyConditionExpression,
@@ -236,6 +238,7 @@ module.exports = {
 
   dynamoScan: function(tableName, callback, indexName, lastEvaluatedKey, filterExpression, expressionAttributeNames, expressionAttributeValues, attributesToGet) {
     tableName += '-' + environment;
+    const documentClient = new AWS.DynamoDB.DocumentClient();
     var params = {
       TableName: tableName
     };
