@@ -5,6 +5,11 @@ const AWS = require("aws-sdk-mock");
 AWS.mock('DynamoDB.DocumentClient', 'query', 'message');
 AWS.mock('DynamoDB.DocumentClient', 'scan', 'message');
 
+const http = require('http')
+const https = require('https')
+const pki = require('node-forge').pki
+
+mockServer()
 
 describe("LambdaHelper", function() {
 
@@ -40,10 +45,10 @@ describe("LambdaHelper", function() {
       lh.dynamoGet("marketingData", {"type":"awsLambdaHelperTest", "date": cur_date}, function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
         expect(result).to.have.all.keys(["content", "date", "type"]);
-        expect(result).to.eql({ 
+        expect(result).to.eql({
           content: 'This is a followup test for the awsLambdaHelper package',
           date: cur_date,
-          type: 'awsLambdaHelperTest' 
+          type: 'awsLambdaHelperTest'
         });
         done();
       });
@@ -90,28 +95,34 @@ describe("LambdaHelper", function() {
   describe("Http(s) requests", function() {
     const options = {
       method: "GET",
-      hostname: "httpbin.org",
-      path: "/get",
+      hostname: "localhost",
+      port: 8008,
+      path: "/",
       headers:
       {
         "Cache-Control": "no-cache"
       }
     };
-    
+
+    const https_options = Object.assign({}, options, {
+      rejectUnauthorized: false,
+      port: 8443
+    })
+
     it("http", function(done) {
-      lh.httpsRequest(options, "", function(err, result) {
+      lh.httpRequest(options, "", function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
         expect(result).to.include.keys(["body"]);
-        expect(JSON.parse(result.body)).to.include.keys(["args", "headers", "origin", "url"]);
+        expect(JSON.parse(result.body)).to.include.keys(["status"]);
         done();
       });
     });
 
     it("https", function(done) {
-      lh.httpsRequest(options, "", function(err, result) {
+      lh.httpsRequest(https_options, "", function(err, result) {
         expect(err, "Expected error to be undefined").to.be.undefined;
         expect(result).to.include.keys(["body"]);
-        expect(JSON.parse(result.body)).to.include.keys(["args", "headers", "origin", "url"]);
+        expect(JSON.parse(result.body)).to.include.keys(["status"]);
         done();
       });
     });
@@ -128,3 +139,25 @@ describe("LambdaHelper", function() {
     });
   });
 });
+
+
+function mockServer() {
+  function status200 (_, res) {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end('{ "status": "OK" }');
+  }
+  const http_s = http.createServer(status200).listen(8008);
+
+  var keys = pki.rsa.generateKeyPair(2048);
+  var cert = pki.createCertificate();
+  cert.publicKey = keys.publicKey;
+  cert.serialNumber = '01';
+  cert.sign(keys.privateKey);
+
+  // convert a Forge certificate and privateKey to PEM
+  var pem = pki.certificateToPem(cert);
+  var key = pki.privateKeyToPem(keys.privateKey);
+
+  const https_s = https.createServer({key: key, cert: pem}, status200).listen(8443);
+  return [http_s, https_s]
+}
