@@ -1,4 +1,8 @@
-const expect = require("chai").expect;
+const chai = require("chai");
+var chaiAsPromised = require("chai-as-promised");
+chai.use(chaiAsPromised);
+const expect = chai.expect;
+
 const lh = require("..");
 
 const AWS = require("aws-sdk-mock");
@@ -138,6 +142,32 @@ describe("LambdaHelper", function() {
       });
     });
   });
+
+  describe("Callback to Promise", function() {
+    let arg1 = "bla", arg2 = { something: "to test" }, callback_fn
+    callback_fn = function(fn_arg1, fn_arg2, callback) {
+      it("keeps the same arguments but appends a callback function", function() {
+        expect(fn_arg1).to.equal(arg1)
+        expect(fn_arg2).to.equal(arg2)
+        expect(callback).to.be.a('function')
+        callback()
+      })
+    }
+    let promisified_fn = lh.CtP(callback_fn)
+    it("returns a function", function() {
+      expect(promisified_fn).to.be.a('function')
+    })
+    it("returns a promise", function() {
+      let promise_result = promisified_fn(arg1, arg2)
+      expect(promise_result).to.be.a('promise')
+      expect(promise_result).to.eventually.be.fulfilled
+    })
+    it("rejects the promise when callback has a first argument", function() {
+      let error = new Error('Callback to Promise Error')
+      let promisified_error_fn = lh.CtP(function(cb){cb(error)})
+      expect(promisified_error_fn()).to.eventually.be.rejectedWith(error)
+    })
+  })
 });
 
 
