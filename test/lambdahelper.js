@@ -13,7 +13,7 @@ const http = require('http')
 const https = require('https')
 const pki = require('node-forge').pki
 
-mockServer()
+const servers = mockServer()
 
 describe("LambdaHelper", function() {
 
@@ -113,24 +113,38 @@ describe("LambdaHelper", function() {
       port: 8443
     })
 
+    let both
     it("http", function(done) {
-      lh.httpRequest(options, "", function(err, result) {
-        expect(err, "Expected error to be undefined").to.be.undefined;
-        expect(result).to.include.keys(["body"]);
-        expect(JSON.parse(result.body)).to.include.keys(["status"]);
-        done();
+      servers.then(([http_s, https_s]) => {
+        lh.httpRequest(options, "", function(err, result) {
+          expect(err, "Expected error to be undefined").to.be.undefined;
+          expect(result).to.include.keys(["body"]);
+          expect(JSON.parse(result.body)).to.include.keys(["status"]);
+          done();
+          if(both) {
+            http_s.close()
+            https_s.close()
+          }
+          else both=true
+        });
       });
     });
 
     it("https", function(done) {
-      lh.httpsRequest(https_options, "", function(err, result) {
-        expect(err, "Expected error to be undefined").to.be.undefined;
-        expect(result).to.include.keys(["body"]);
-        expect(JSON.parse(result.body)).to.include.keys(["status"]);
-        done();
+      servers.then(([http_s, https_s]) => {
+        lh.httpsRequest(https_options, "", function(err, result) {
+          expect(err, "Expected error to be undefined").to.be.undefined;
+          expect(result).to.include.keys(["body"]);
+          expect(JSON.parse(result.body)).to.include.keys(["status"]);
+          done();
+          if(both) {
+            http_s.close()
+            https_s.close()
+          }
+          else both=true
+        });
       });
     });
-
   });
 
 
@@ -171,7 +185,7 @@ describe("LambdaHelper", function() {
 });
 
 
-function mockServer() {
+async function mockServer() {
   function status200 (_, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end('{ "status": "OK" }');
