@@ -396,6 +396,8 @@ module.exports = {
     return functionName;
   },
 
+  CtP: callbackToPromise,
+
   AWS: AWS,
 
   AWSXRay: AWSXRay
@@ -555,4 +557,14 @@ function hideVulnerableKeys(key, val) {
   if(additionalSecretFilter && additionalSecretFilter.test(key))
     return "***"
   return val
+}
+
+function callbackToPromise(fn) {
+  return function(...args) {
+    return new Promise((res, rej) => {
+      let callbackHandle = (error, result) => { error? rej(error): res(result) }
+      args.push(callbackHandle)
+      fn.apply(this, args)
+    })
+  }
 }
