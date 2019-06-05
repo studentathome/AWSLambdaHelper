@@ -7,9 +7,9 @@ const lambda = new AWS.Lambda();
 const documentClient = new AWS.DynamoDB.DocumentClient();
 const http = AWSXRay.captureHTTPs(require('http'));
 const https = AWSXRay.captureHTTPs(require('https'));
-const joi = require('joi');
+const joi = require('@hapi/joi');
 
-let functionName = 'unknown';
+let functionName = 'unknown-unknown';
 let environment = 'unknown';
 let logGroupName = process.env.CW_LOG_GROUP_NAME ? process.env.CW_LOG_GROUP_NAME + '-' + environment : undefined;
 let logEvent;
@@ -27,8 +27,8 @@ const init = (event, context, callback) => {
     event.body = JSON.parse(event.body);
   }
 
-  functionName = context.functionName;
-  environment = functionName.split('-')[1];
+  functionName = context.functionName || 'unknown-unknown';
+  environment = functionName.split('-')[1] || 'unknown';
   logGroupName = process.env.CW_LOG_GROUP_NAME ? process.env.CW_LOG_GROUP_NAME + '-' + environment : undefined;
 
   logEvent = JSON.parse(JSON.stringify(event));
