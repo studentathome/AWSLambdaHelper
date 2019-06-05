@@ -1,0 +1,33 @@
+{
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2019
+  },
+  "rules": {
+    "indent": [
+      "error",
+      2
+    ],
+    "no-var": "error",
+    "no-undef": "error",
+    "quotes": [
+      "error",
+      "single",
+      {
+        "allowTemplateLiterals": true,
+        "avoidEscape": true
+      }
+    ],
+    "semi": "error",
+    "no-const-assign": "error",
+    "no-shadow": "error",
+    "prefer-const": "error",
+    "one-var": [
+      "error",
+      "never"
+    ]
+  }
+}
