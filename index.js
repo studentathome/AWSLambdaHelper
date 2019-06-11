@@ -28,7 +28,7 @@ const init = (event, context, callback) => {
   }
 
   functionName = context.functionName || 'unknown-unknown';
-  environment = functionName.split('-')[1] || 'unknown';
+  environment = functionName.split('-')[functionName.split('-').length - 1] || 'unknown';
   logGroupName = process.env.CW_LOG_GROUP_NAME ? process.env.CW_LOG_GROUP_NAME + '-' + environment : undefined;
 
   logEvent = JSON.parse(JSON.stringify(event));
@@ -39,6 +39,7 @@ const init = (event, context, callback) => {
   console.info('Received context:', JSON.stringify(logContext, hideVulnerableKeys, 2));
 
   checkRequiredParams(event.headers, event.body, callback);
+  console.time(functionName);
 };
 
 const initWith = (fn, schema=null) => {
@@ -66,7 +67,7 @@ const callbackResponse = (statusCode, body, callback) => {
   try {
     response.body = JSON.stringify(body);
   } catch (e) {
-    response.body = "{'error': 'body could not be stringified'}";
+    response.body = 'body could not be stringified';
   }
 
   try {
@@ -76,14 +77,10 @@ const callbackResponse = (statusCode, body, callback) => {
   }
   console.timeEnd(functionName);
 
-  try {
-    if (statusCode >= 500) {
-      callback(JSON.stringify(response));
-    } else {
-      callback(undefined, JSON.stringify(response));
-    }
-  } catch (e) {
-    callback("{'error': 'response could not be stringified'}");
+  if (statusCode >= 500) {
+    callback(response);
+  } else {
+    callback(undefined, response);
   }
 
   postMessages();

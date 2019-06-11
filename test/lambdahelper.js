@@ -20,7 +20,7 @@ describe('LambdaHelper', function() {
 
   describe('Init', function() {
     it('succesful init', function() {
-      lh.init({}, {}, function(err) {
+      lh.init({}, {'functionName': 'marketingData-dev'}, function(err) {
         expect(err, 'Expected error to be undefined').to.be.undefined;
       });
     });
