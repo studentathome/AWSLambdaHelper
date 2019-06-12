@@ -24,15 +24,19 @@ const additionalSecretFilter = process.env.SECRET_RE? new RegExp(process.env.SEC
 
 const init = (event, context, callback) => {
   if (event.body && typeof event.body === 'string') {
-    event.body = JSON.parse(event.body);
+    try {
+      event.body = JSON.parse(event.body);
+    } catch (e) {
+      //Body will remain a string as it's not valid json
+    }
   }
 
-  functionName = context.functionName || 'unknown-unknown';
+  if (context) functionName = context.functionName || 'unknown-unknown';
   environment = functionName.split('-')[functionName.split('-').length - 1] || 'unknown';
   logGroupName = process.env.CW_LOG_GROUP_NAME ? process.env.CW_LOG_GROUP_NAME + '-' + environment : undefined;
 
   logEvent = JSON.parse(JSON.stringify(event));
-  logContext = context;
+  logContext = context || {};
   logMessages = [];
 
   console.info('Received event:', JSON.stringify(logEvent, hideVulnerableKeys, 2));
@@ -44,11 +48,11 @@ const init = (event, context, callback) => {
 
 const initWith = (fn, schema=null) => {
   return (event, context, callback) => {
-    init(event, context, async (err, result) => {
-      if (err) return err;
+    return init(event, context, async (err, result) => {
+      if (err) callback(err);
       if (schema) {
-        const joiValidation = joi.validate(event, schema);
-        if (joiValidation.error) return JSON.stringify(result.error);
+        const joiValidation = joi.validate(event, joi.compile(schema));
+        if (joiValidation.error) callback(joiValidation.error);
       }
       fn(event, context, callback);
     });
@@ -145,20 +149,11 @@ const dynamoPut = (tableName, item, callback, conditionExpression, expressionAtt
   tableName += '-' + environment;
   const params = {
     TableName : tableName,
-    Item: item
+    Item: item,
+    ConditionExpression: conditionExpression || undefined,
+    ExpressionAttributeNames: expressionAttributeNames || undefined,
+    ExpressionAttributeValues: expressionAttributeValues || undefined
   };
-
-  if (conditionExpression) {
-    params.ConditionExpression = conditionExpression;
-  }
-
-  if (expressionAttributeNames) {
-    params.ExpressionAttributeNames = expressionAttributeNames;
-  }
-
-  if (expressionAttributeValues) {
-    params.ExpressionAttributeValues = expressionAttributeValues;
-  }
 
   documentClient.put(params, (err, data) => {
     if (err) {
@@ -180,20 +175,11 @@ const dynamoUpdate = (tableName, key, updateExpression, expressionAttributeValue
     TableName: tableName,
     Key: key,
     UpdateExpression: updateExpression,
-    ReturnValues: 'ALL_NEW'
+    ReturnValues: 'ALL_NEW',
+    ExpressionAttributeNames: expressionAttributeNames || undefined,
+    ExpressionAttributeValues: expressionAttributeValues || undefined,
+    ConditionExpression: conditionExpression || undefined
   };
-
-  if (expressionAttributeNames) {
-    params.ExpressionAttributeNames = expressionAttributeNames;
-  }
-
-  if (expressionAttributeValues) {
-    params.ExpressionAttributeValues = expressionAttributeValues;
-  }
-
-  if (conditionExpression) {
-    params.ConditionExpression = conditionExpression;
-  }
 
   documentClient.update(params, (err, data) => {
     if (err) {
@@ -215,28 +201,13 @@ const dynamoQuery = (tableName, keyConditionExpression, expressionAttributeValue
   const params = {
     TableName: tableName,
     KeyConditionExpression: keyConditionExpression,
-    ExpressionAttributeValues: expressionAttributeValues
+    ExpressionAttributeValues: expressionAttributeValues,
+    IndexName: indexName || undefined,
+    ExpressionAttributeNames: expressionAttributeNames || undefined,
+    ExclusiveStartKey: lastEvaluatedKey || undefined,
+    AttributesToGet: attributesToGet || undefined,
+    FilterExpression: filterExpression || undefined
   };
-
-  if (indexName) {
-    params.IndexName = indexName;
-  }
-
-  if (expressionAttributeNames) {
-    params.ExpressionAttributeNames = expressionAttributeNames;
-  }
-
-  if (lastEvaluatedKey) {
-    params.ExclusiveStartKey = lastEvaluatedKey;
-  }
-
-  if (attributesToGet) {
-    params.AttributesToGet = attributesToGet;
-  }
-
-  if (filterExpression) {
-    params.FilterExpression = filterExpression;
-  }
 
   documentClient.query(params, (err, data) => {
     if (err) {

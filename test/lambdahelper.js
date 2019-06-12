@@ -17,8 +17,21 @@ const pki = require('node-forge').pki;
 const servers = mockServer();
 
 describe('LambdaHelper', function() {
-
   describe('Init', function() {
+    it('no context init', function() {
+      lh.init('', null, function(err) {
+        expect(lh.getFunctionName()).to.eql('unknown-unknown');
+        expect(lh.getEnvironment()).to.eql('unknown');
+        expect(err).to.be.undefined;
+      });
+    });
+    it('empty context init', function() {
+      lh.init('', {}, function(err) {
+        expect(lh.getFunctionName()).to.eql('unknown-unknown');
+        expect(lh.getEnvironment()).to.eql('unknown');
+        expect(err).to.be.undefined;
+      });
+    });
     it('succesful init', function() {
       lh.init({}, {'functionName': 'marketingData-dev'}, function(err) {
         expect(err, 'Expected error to be undefined').to.be.undefined;
@@ -26,6 +39,53 @@ describe('LambdaHelper', function() {
     });
   });
 
+  describe('Init With', function() {
+    const eventExpected = {test: 'event', body: {test: 'body'}};
+    const contextExpected = {'functionName': 'marketingData-dev'};
+    const eventTest = {
+      test: 'event',
+      body: '{"test": "body"}'
+    };
+    const contextTest = {
+      functionName: 'marketingData-dev'
+    };
+    it('succesful init with', function(done) {
+      const testFunction = function(event, context, callback) {
+        expect(eventExpected).to.eql(event);
+        expect(lh.getFunctionName()).to.eql('marketingData-dev');
+        expect(lh.getEnvironment()).to.eql('dev');
+        done();
+      };
+      const error = lh.initWith(testFunction)(eventTest, contextTest, function(err) {
+        expect(err).to.be.undefined;
+      });
+      expect(error).to.be.undefined;
+    });
+    it('failed schema validation for init with', function(done) {
+      const testFunction = function(event, context, callback) {
+        expect(eventExpected).to.eql(event);
+        expect(lh.getFunctionName()).to.eql('marketingData-dev');
+        expect(lh.getEnvironment()).to.eql('dev');
+        done();
+      };
+      const schema = {'body': 'should be a string for this test lambda'};
+      lh.initWith(testFunction, schema)(eventTest, contextTest, function(err) {
+        expect(err.toString()).to.eql('ValidationError: child "body" fails because ["body" must be a string]');
+      });
+    });
+    it('succesful schema validation for init with', function(done) {
+      const testFunction = function(event, context, callback) {
+        expect({body: {}}).to.eql(event);
+        expect(lh.getFunctionName()).to.eql('marketingData-dev');
+        expect(lh.getEnvironment()).to.eql('dev');
+        done();
+      };
+      const schema = {'body': {}};
+      lh.initWith(testFunction, schema)({body: '{}'}, contextTest, function(err) {
+        expect(err).to.be.undefined;
+      });
+    });
+  });
 
   describe('DynamoDB', function() {
     const cur_date = new Date().toISOString();
@@ -85,6 +145,14 @@ describe('LambdaHelper', function() {
 
     it('log an error', function() {
       lh.logError({error: 'AWSLambdaHelper Test'});
+    });
+
+    it('log an error with options', function() {
+      lh.logError({error: 'AWSLambdaHelper Test'}, {test: 'hi'});
+    });
+
+    it('log an error with incorrectly assigned options', function() {
+      lh.logError({error: 'AWSLambdaHelper Test'}, 'not json');
     });
 
     it('starts an xray rec', function() {
@@ -182,6 +250,18 @@ describe('LambdaHelper', function() {
       const error = new Error('Callback to Promise Error');
       const promisified_error_fn = lh.CtP(function(cb){cb(error);});
       expect(promisified_error_fn()).to.eventually.be.rejectedWith(error);
+    });
+  });
+
+  describe('Sleep should wait for at least the specified delay', function() {
+    it('should take over a second to resume the code with 1000 milliseconds', function(done) {
+      const startTime = new Date();
+      lh.sleep(1000).then(function() {
+        const endTime = new Date();
+        const diff = endTime - startTime;
+        expect(diff).to.be.least(1000);
+        done();
+      });
     });
   });
 });

@@ -6,7 +6,8 @@
   "scripts": {
     "preversion": "npm run test",
     "set_env": "AWS_XRAY_CONTEXT_MISSING=LOG_ERROR AWS_REGION=eu-west-1 AWS_ENVIRONMENT=dev CW_LOG_GROUP_NAME=AWSLambdaHelperTests",
-    "test": "npm run set_env nyc mocha"
+    "test": "npm run set_env nyc mocha",
+    "coverage": "npm run set_env nyc -- --reporter=html mocha"
   },
   "repository": {
     "type": "git",
