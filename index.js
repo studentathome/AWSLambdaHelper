@@ -576,6 +576,7 @@ module.exports = {
   initWith: initWith,
   callbackResponse: callbackResponse,
   invokeLambda: invokeLambda,
+  invokeLambda2: invokeLambda2,
   dynamoGet: dynamoGet,
   dynamoPut: dynamoPut,
   dynamoUpdate: dynamoUpdate,
