@@ -49,7 +49,7 @@ const init = (event, context, callback) => {
 const initWith = (fn, schema=null) => {
   return (event, context, callback) => {
     return init(event, context, async (err, result) => {
-      if (err) callback(err);
+      if (err) callbackResponse(500, err, callback);
       if (schema) {
         const joiValidation = joi.validate(event, joi.compile(schema));
         if (joiValidation.error) callback(joiValidation.error);
@@ -91,14 +91,47 @@ const callbackResponse = (statusCode, body, callback) => {
 };
 
 const invokeLambda = (lambdaFuncName, payload, callback, optionalParameters) => {
-  functionName += '-' + environment;
+  lambdaFuncName += '-' + environment;
   let params = {
-    FunctionName: functionName,
+    FunctionName: lambdaFuncName,
     Payload: JSON.stringify(payload)
   };
 
   if (optionalParameters) {
     params = Object.assign({}, params, optionalParameters);
+  }
+
+  lambda.invoke(params, (err, result) => {
+    if (err) {
+      console.log('Error invoking ' + params.FunctionName);
+      console.log(JSON.stringify(err, null, 2));
+      module.exports.logError(err);
+      callback(err);
+    } else {
+      if (!result.Payload) {
+        callback();
+      } else {
+        const resultPayload = JSON.parse(result.Payload);
+        let body;
+        if (resultPayload.body) {
+          body = JSON.parse(resultPayload.body);
+        }
+        if (resultPayload.statusCode >= 200 && resultPayload.statusCode < 300) {
+          callback(undefined, body);
+        } else {
+          callback(body);
+        }
+      }
+    }
+  });
+};
+
+const invokeLambda2 = (options, callback) => {
+  const params = Object.assign({}, params, options);
+  try {
+    params.Payload = JSON.stringify(options.Payload);
+  } catch (e) {
+    params.Payload = 'payload could not be stringified';
   }
 
   lambda.invoke(params, (err, result) => {
